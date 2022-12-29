@@ -10,7 +10,9 @@ typedef struct map {
     int floorSize;
 }Map;
 
-void Draw(void);
-void Keyboard(unsigned char key, int x, int y);
+void Display(void);
+void DrawWall();
+void DrawFloor();
+void DrawRoof();
 
 #endif
