@@ -5,8 +5,10 @@
 
 Map labyrinth;
 Player labyrinthGuy;
-
+int TeleportPermissionUP = TRUE;
+int TeleportPermissionDOWN = TRUE;
 /*--------------*/
+
 void TeleportPlayer(int teleportType)
 {
     if (teleportType == UP && labyrinthGuy.currentFloor < labyrinth.numberOfFloors)
@@ -56,6 +58,73 @@ void TeleportPlayer(int teleportType)
         }
     }
     return;
+}
+
+int PlayerCollision(unsigned char key, int time)
+{
+
+    float fraction = 0.5f;
+
+    int blockPosX = ((labyrinthGuy.playerCamera.x) / 6),
+        blockPosZ = ((labyrinthGuy.playerCamera.z) / 6);
+
+    /*TELEPORT COLLISION*/
+
+    if (time == 1 && TeleportPermissionUP == FALSE && labyrinth.map[blockPosZ][blockPosX] != '2')
+        TeleportPermissionUP = TRUE;
+    if (time == 1 && TeleportPermissionDOWN == FALSE && labyrinth.map[blockPosZ][blockPosX] != '3')
+        TeleportPermissionDOWN = TRUE;
+
+    if (labyrinth.map[blockPosZ][blockPosX] == '2' && TeleportPermissionUP == TRUE)
+    {
+        TeleportPlayer(UP);
+        TeleportPermissionUP = FALSE;
+        TeleportPermissionDOWN = FALSE;
+        return TRUE;
+    }
+    else if (labyrinth.map[blockPosZ][blockPosX] == '3' && TeleportPermissionDOWN == TRUE)
+    {
+        TeleportPlayer(DOWN);
+        TeleportPermissionDOWN = FALSE;
+        TeleportPermissionUP = FALSE;
+        return TRUE;
+    }
+    printf("current floor: %d\n", labyrinthGuy.currentFloor);
+
+    /*--------------*/
+
+    /*WALL COLLISION*/
+
+    if (key == 'w')
+    {
+        blockPosX = ((labyrinthGuy.playerCamera.x + labyrinthGuy.playerCamera.lx * fraction) / 6);
+        blockPosZ = ((labyrinthGuy.playerCamera.z + labyrinthGuy.playerCamera.lz * fraction) / 6);
+    }
+    else if (key == 's')
+    {
+        blockPosX = ((labyrinthGuy.playerCamera.x - labyrinthGuy.playerCamera.lx * fraction) / 6);
+        blockPosZ = ((labyrinthGuy.playerCamera.z - labyrinthGuy.playerCamera.lz * fraction) / 6);
+    };
+
+    if (labyrinth.map[blockPosZ][blockPosX] == '1')
+    {
+        if (key == 'w')
+        {
+            labyrinthGuy.playerCamera.x -= labyrinthGuy.playerCamera.lx * fraction;
+            labyrinthGuy.playerCamera.z -= labyrinthGuy.playerCamera.lz * fraction;
+        }
+        else if (key == 's')
+        {
+            labyrinthGuy.playerCamera.x += labyrinthGuy.playerCamera.lx * fraction;
+            labyrinthGuy.playerCamera.z += labyrinthGuy.playerCamera.lz * fraction;
+        }
+
+        return TRUE;
+    }
+
+    /*--------------*/
+
+    return FALSE;
 }
 
 void SetInitialPlayerConfig()
@@ -175,6 +244,11 @@ void WindowsResize(int w, int h)
 
 void UserActions(unsigned char key, int xx, int yy)
 {
+    if (PlayerCollision(key, 1))
+    {
+        return;
+    }
+
     float fraction = 0.3f;
 
     /*USER MOVEMENT*/
@@ -198,15 +272,13 @@ void UserActions(unsigned char key, int xx, int yy)
         labyrinthGuy.playerCamera.z += labyrinthGuy.playerCamera.lz * fraction;
     }
 
-   if (key == 's')
+    if (key == 's')
     {
         labyrinthGuy.playerCamera.x -= labyrinthGuy.playerCamera.lx * fraction;
         labyrinthGuy.playerCamera.z -= labyrinthGuy.playerCamera.lz * fraction;
     }
-    if (key == 'e')
-        TeleportPlayer(UP);
-    if (key == 'r')
-        TeleportPlayer(DOWN);
+
+    PlayerCollision(key, 2);
     /*--------------*/
 
     /*USER GET ITEM*/
