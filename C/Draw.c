@@ -1,79 +1,112 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <GL/glut.h>
 #include "index.h"
 
-void DrawRoof(){}
-void DrawFloor(){}
-void DrawWall()
+void DrawMap(Map labyrinth, Player labyrinthGuy)
 {
-    //  Clear screen and Z-buffer
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    int i, j;
+    int stop;
+    //printf("\nDRAW MAP\n");
+    for (i = ((labyrinthGuy.currentFloor - 1) * labyrinth.floorSize); i < (labyrinth.floorSize * labyrinthGuy.currentFloor); i++)
+    {
+        for (j = 0; j < labyrinth.floorSize; j++)
+        {
+            //printf(" %c ", labyrinth.map[i][j]);
+            if (labyrinth.map[i][j] == '1')
+                DrawWall(i, j);
+            else if (labyrinth.map[i][j] == '0')
+            {
+                DrawFloor(i, j, gray);
+                DrawRoof(i, j, gray);
+            }
+            else if (labyrinth.map[i][j] == 'x')
+            {
+                DrawFloor(i, j, yellow);
+                DrawRoof(i, j, yellow);
+            }
+            else if (labyrinth.map[i][j] == '2'){
+                DrawFloor(i, j, red);
+                DrawRoof(i, j, red);
+            }
+            else if (labyrinth.map[i][j] == '3'){
+                DrawFloor(i, j, pink);
+                DrawRoof(i, j, pink);
+            }
+            // else if (labyrinth.map[i] == '4')
+            //     DrawWall(i, j);
+        }
+    }
 
-    // Reset transformations
-    
-
-    // Multi-colored side - FRONT
-    glBegin(GL_QUADS);
-    glColor3f(0.8, 0.0, 0.4);
-    glVertex3f(0.5, -0.5, -0.5);
-    glVertex3f(0.5, 0.5, -0.5);
-    glVertex3f(-0.5, 0.5, -0.5);
-    glVertex3f(-0.5, -0.5, -0.5);
-    glEnd();
-
-    // White side - BACK
-    glBegin(GL_QUADS);
-    glColor3f(1.0, 1.0, 1.0);
-    glVertex3f(0.5, -0.5, 0.5);
-    glVertex3f(0.5, 0.5, 0.5);
-    glVertex3f(-0.5, 0.5, 0.5);
-    glVertex3f(-0.5, -0.5, 0.5);
-    glEnd();
-
-    // Purple side - RIGHT
-    glBegin(GL_QUADS);
-    glColor3f(1.0, 0.0, 1.0);
-    glVertex3f(0.5, -0.5, -0.5);
-    glVertex3f(0.5, 0.5, -0.5);
-    glVertex3f(0.5, 0.5, 0.5);
-    glVertex3f(0.5, -0.5, 0.5);
-    glEnd();
-
-    // Green side - LEFT
-    glBegin(GL_QUADS);
-    glColor3f(0.0, 1.0, 0.0);
-    glVertex3f(-0.5, -0.5, 0.5);
-    glVertex3f(-0.5, 0.5, 0.5);
-    glVertex3f(-0.5, 0.5, -0.5);
-    glVertex3f(-0.5, -0.5, -0.5);
-    glEnd();
-
-    // Blue side - TOP
-    glBegin(GL_QUADS);
-    glColor3f(0.0, 0.0, 1.0);
-    glVertex3f(0.5, 0.5, 0.5);
-    glVertex3f(0.5, 0.5, -0.5);
-    glVertex3f(-0.5, 0.5, -0.5);
-    glVertex3f(-0.5, 0.5, 0.5);
-    glEnd();
-
-    // Red side - BOTTOM
-    glBegin(GL_QUADS);
-    glColor3f(1.0, 0.0, 0.0);
-    glVertex3f(0.5, -0.5, -0.5);
-    glVertex3f(0.5, -0.5, 0.5);
-    glVertex3f(-0.5, -0.5, 0.5);
-    glVertex3f(-0.5, -0.5, -0.5);
-    glEnd();
-
-    glFlush();
     glutSwapBuffers();
+    return;
 }
 
-void Display(void) {
-	glClearColor(0.0, 0.0, 0.0, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//Draw();
-	glutSwapBuffers();
+void DrawRoof(int x, int z, void (color)())
+{
+    double convertedWindowsWidth = windowsWidth / 100;
+
+    glBegin(GL_QUADS);
+
+    color();
+    glVertex3f(z * 6, convertedWindowsWidth, (x + 1) * 6);
+    glVertex3f(z * 6, convertedWindowsWidth, x * 6);
+    glVertex3f((z + 1) * 6, convertedWindowsWidth, x * 6);
+    glVertex3f((z + 1) * 6, convertedWindowsWidth, (x + 1) * 6);
+
+    glEnd();
+
+    return;
+}
+
+void DrawFloor(int x, int z, void (color)())
+{
+
+    double convertedWindowsHeight = windowsHeight / 100;
+
+    glBegin(GL_QUADS);
+
+    color();
+    glVertex3f(z * 6, 0, (x + 1) * 6);
+    glVertex3f(z * 6, 0, x * 6);
+    glVertex3f((z + 1) * 6, 0, x * 6);
+    glVertex3f((z + 1) * 6, 0, (x + 1) * 6);
+
+    glEnd();
+
+    return;
+}
+
+void DrawWall(int x, int z)
+{
+    double convertedWindowsWidth = windowsWidth / 100;
+
+    glBegin(GL_QUADS);
+
+    // FRONT
+    white();
+    glVertex3f(z * 6, 0, (x + 1) * 6);
+    glVertex3f(z * 6, convertedWindowsWidth, (x + 1) * 6);
+    glVertex3f((z + 1) * 6, convertedWindowsWidth, (x + 1) * 6);
+    glVertex3f((z + 1) * 6, 0, (x + 1) * 6);
+
+    // BACK
+    green();
+    glVertex3f(z * 6, 0, x * 6);
+    glVertex3f(z * 6, convertedWindowsWidth, x * 6);
+    glVertex3f((z + 1) * 6, convertedWindowsWidth, x * 6);
+    glVertex3f((z + 1) * 6, 0, x * 6);
+
+    // LEFT
+    blue();
+    glVertex3f((z + 1) * 6, convertedWindowsWidth, (x + 1) * 6);
+    glVertex3f((z + 1) * 6, convertedWindowsWidth, x * 6);
+    glVertex3f((z + 1) * 6, 0, x * 6);
+    glVertex3f((z + 1) * 6, 0, (x + 1) * 6);
+
+    // RIGHT
+    red();
+    glVertex3f(z * 6, 0, (x + 1) * 6);
+    glVertex3f(z * 6, 0, x * 6);
+    glVertex3f(z * 6, convertedWindowsWidth, x * 6);
+    glVertex3f(z * 6, convertedWindowsWidth, (x + 1) * 6);
+
+    glEnd();
 }
