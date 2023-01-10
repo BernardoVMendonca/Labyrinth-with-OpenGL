@@ -22,6 +22,7 @@ typedef struct map
     char **map;
     int numberOfFloors;
     int floorSize;
+    int numberOfItems;
 } Map;
 
 typedef struct camera
@@ -43,6 +44,7 @@ typedef struct player
 /*DRAW MAP*/
 
 void DrawMap(Map labyrinth, Player labyrinthGuy);
+void DrawItem(int x, int z, void(color)());
 void DrawWall(int x, int z);
 void DrawFloor(int x, int z, void(color)());
 void DrawRoof(int x, int z, void(color)());
@@ -55,9 +57,11 @@ void green();
 void blue();
 void red();
 void yellow();
+void orange();
 void pink();
 void white();
-void gray();
+void grey();
+void grey2();
 void black();
 
 /*--------------*/

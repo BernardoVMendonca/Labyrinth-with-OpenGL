@@ -3,35 +3,38 @@
 void DrawMap(Map labyrinth, Player labyrinthGuy)
 {
     int i, j;
-    int stop;
-    //printf("\nDRAW MAP\n");
+
+    int blockPosX = ((labyrinthGuy.playerCamera.x) / 6),
+        blockPosZ = ((labyrinthGuy.playerCamera.z) / 6);
+
     for (i = ((labyrinthGuy.currentFloor - 1) * labyrinth.floorSize); i < (labyrinth.floorSize * labyrinthGuy.currentFloor); i++)
     {
         for (j = 0; j < labyrinth.floorSize; j++)
         {
-            //printf(" %c ", labyrinth.map[i][j]);
-            if (labyrinth.map[i][j] == '1')
+            switch (labyrinth.map[i][j])
+            {
+            case '0':
+                ((i == blockPosZ) && (blockPosX == j)) ? DrawFloor(i, j, green) : DrawFloor(i, j, grey2);
+                break;
+            case '1':
                 DrawWall(i, j);
-            else if (labyrinth.map[i][j] == '0')
-            {
-                DrawFloor(i, j, gray);
-                DrawRoof(i, j, gray);
-            }
-            else if (labyrinth.map[i][j] == 'x')
-            {
-                DrawFloor(i, j, yellow);
-                DrawRoof(i, j, yellow);
-            }
-            else if (labyrinth.map[i][j] == '2'){
+                break;
+            case '2':
                 DrawFloor(i, j, red);
-                DrawRoof(i, j, red);
-            }
-            else if (labyrinth.map[i][j] == '3'){
+                break;
+            case '3':
                 DrawFloor(i, j, pink);
-                DrawRoof(i, j, pink);
+                break;
+            case '4':
+                DrawFloor(i, j, orange);
+                break;
+            case 'x':
+                DrawFloor(i, j, yellow);
+                break;
+
+            default:
+                break;
             }
-            // else if (labyrinth.map[i] == '4')
-            //     DrawWall(i, j);
         }
     }
 
@@ -39,7 +42,7 @@ void DrawMap(Map labyrinth, Player labyrinthGuy)
     return;
 }
 
-void DrawRoof(int x, int z, void (color)())
+void DrawRoof(int x, int z, void(color)())
 {
     double convertedWindowsWidth = windowsWidth / 100;
 
@@ -56,7 +59,7 @@ void DrawRoof(int x, int z, void (color)())
     return;
 }
 
-void DrawFloor(int x, int z, void (color)())
+void DrawFloor(int x, int z, void(color)())
 {
 
     double convertedWindowsHeight = windowsHeight / 100;
@@ -79,34 +82,42 @@ void DrawWall(int x, int z)
     double convertedWindowsWidth = windowsWidth / 100;
 
     glBegin(GL_QUADS);
+    grey();
 
     // FRONT
-    white();
+
     glVertex3f(z * 6, 0, (x + 1) * 6);
     glVertex3f(z * 6, convertedWindowsWidth, (x + 1) * 6);
     glVertex3f((z + 1) * 6, convertedWindowsWidth, (x + 1) * 6);
     glVertex3f((z + 1) * 6, 0, (x + 1) * 6);
 
     // BACK
-    green();
+
     glVertex3f(z * 6, 0, x * 6);
     glVertex3f(z * 6, convertedWindowsWidth, x * 6);
     glVertex3f((z + 1) * 6, convertedWindowsWidth, x * 6);
     glVertex3f((z + 1) * 6, 0, x * 6);
 
     // LEFT
-    blue();
+
     glVertex3f((z + 1) * 6, convertedWindowsWidth, (x + 1) * 6);
     glVertex3f((z + 1) * 6, convertedWindowsWidth, x * 6);
     glVertex3f((z + 1) * 6, 0, x * 6);
     glVertex3f((z + 1) * 6, 0, (x + 1) * 6);
 
     // RIGHT
-    red();
+
     glVertex3f(z * 6, 0, (x + 1) * 6);
     glVertex3f(z * 6, 0, x * 6);
     glVertex3f(z * 6, convertedWindowsWidth, x * 6);
     glVertex3f(z * 6, convertedWindowsWidth, (x + 1) * 6);
+
+    // TOP
+
+    glVertex3f(z * 6, convertedWindowsWidth, (x + 1) * 6);
+    glVertex3f(z * 6, convertedWindowsWidth, x * 6);
+    glVertex3f((z + 1) * 6, convertedWindowsWidth, x * 6);
+    glVertex3f((z + 1) * 6, convertedWindowsWidth, (x + 1) * 6);
 
     glEnd();
 }

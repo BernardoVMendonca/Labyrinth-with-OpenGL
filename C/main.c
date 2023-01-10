@@ -5,119 +5,91 @@
 
 Map labyrinth;
 Player labyrinthGuy;
-int TeleportPermissionUP = TRUE;
-int TeleportPermissionDOWN = TRUE;
+int mapViewState = FALSE;
+
 /*--------------*/
 
 void TeleportPlayer(int teleportType)
 {
-    if (teleportType == UP && labyrinthGuy.currentFloor < labyrinth.numberOfFloors)
-    {
-        labyrinthGuy.currentFloor++;
-    }
-    else if (teleportType == DOWN && labyrinthGuy.currentFloor > 1)
-    {
-        labyrinthGuy.currentFloor--;
-    }
+    (teleportType == UP && labyrinthGuy.currentFloor < labyrinth.numberOfFloors) ? labyrinthGuy.currentFloor++ : 0;
+    (teleportType == DOWN && labyrinthGuy.currentFloor > 1) ? labyrinthGuy.currentFloor-- : 0;
 
     int i, j;
     for (i = ((labyrinthGuy.currentFloor - 1) * labyrinth.floorSize); i < (labyrinth.floorSize * labyrinthGuy.currentFloor); i++)
     {
         for (j = 0; j < labyrinth.floorSize; j++)
         {
-            if (labyrinth.map[i][j] == '2' && teleportType == UP)
+            if ((teleportType == UP && labyrinth.map[i][j] == '2') ||
+                (teleportType == DOWN && labyrinth.map[i][j] == '3') ||
+                (teleportType == DOWN && labyrinthGuy.currentFloor == 1 && labyrinth.map[i][j] == '2') ||
+                (teleportType == UP && labyrinthGuy.currentFloor == labyrinth.numberOfFloors && labyrinth.map[i][j] == '3'))
             {
                 labyrinthGuy.playerCamera.x = ((j + 1) * 6) - 3;
                 labyrinthGuy.playerCamera.z = ((i + 1) * 6) - 3;
                 break;
-            }
-            else if (labyrinth.map[i][j] == '3' && teleportType == DOWN)
-            {
-                labyrinthGuy.playerCamera.x = ((j + 1) * 6) - 3;
-                labyrinthGuy.playerCamera.z = ((i + 1) * 6) - 3;
-                break;
-            }
-            else if (teleportType == DOWN && labyrinthGuy.currentFloor == 1)
-            {
-                if (labyrinth.map[i][j] == '2')
-                {
-                    labyrinthGuy.playerCamera.x = ((j + 1) * 6) - 3;
-                    labyrinthGuy.playerCamera.z = ((i + 1) * 6) - 3;
-                    break;
-                }
-            }
-            else if (teleportType == UP && labyrinthGuy.currentFloor == labyrinth.numberOfFloors)
-            {
-                if (labyrinth.map[i][j] == '3')
-                {
-                    labyrinthGuy.playerCamera.x = ((j + 1) * 6) - 3;
-                    labyrinthGuy.playerCamera.z = ((i + 1) * 6) - 3;
-                    break;
-                }
             }
         }
     }
+
+    glClearColor(0, 0, 0, 0.0);
     return;
 }
 
-int PlayerCollision(unsigned char key, int time)
+int PlayerCollision(unsigned char key)
 {
-
     float fraction = 0.5f;
+
+    int mulFactor = 1;
 
     int blockPosX = ((labyrinthGuy.playerCamera.x) / 6),
         blockPosZ = ((labyrinthGuy.playerCamera.z) / 6);
 
-    /*TELEPORT COLLISION*/
+    (key == 's') ? mulFactor *= -1 : 0;
 
-    if (time == 1 && TeleportPermissionUP == FALSE && labyrinth.map[blockPosZ][blockPosX] != '2')
-        TeleportPermissionUP = TRUE;
-    if (time == 1 && TeleportPermissionDOWN == FALSE && labyrinth.map[blockPosZ][blockPosX] != '3')
-        TeleportPermissionDOWN = TRUE;
+    /*START COLLISION*/
 
-    if (labyrinth.map[blockPosZ][blockPosX] == '2' && TeleportPermissionUP == TRUE)
+    if (labyrinth.map[blockPosZ][blockPosX] == 'x' && labyrinth.numberOfItems == 0)
     {
-        TeleportPlayer(UP);
-        TeleportPermissionUP = FALSE;
-        TeleportPermissionDOWN = FALSE;
-        return TRUE;
+        printf("\n******YOU WON THE GAME******\n");
+        exit(0);
     }
-    else if (labyrinth.map[blockPosZ][blockPosX] == '3' && TeleportPermissionDOWN == TRUE)
-    {
-        TeleportPlayer(DOWN);
-        TeleportPermissionDOWN = FALSE;
-        TeleportPermissionUP = FALSE;
-        return TRUE;
-    }
-    printf("current floor: %d\n", labyrinthGuy.currentFloor);
 
     /*--------------*/
 
-    /*WALL COLLISION*/
+    /*COLLISION*/
 
-    if (key == 'w')
+    switch (key)
     {
-        blockPosX = ((labyrinthGuy.playerCamera.x + labyrinthGuy.playerCamera.lx * fraction) / 6);
-        blockPosZ = ((labyrinthGuy.playerCamera.z + labyrinthGuy.playerCamera.lz * fraction) / 6);
+    case 'w':
+    case 's':
+        blockPosX = ((labyrinthGuy.playerCamera.x + (labyrinthGuy.playerCamera.lx * fraction * mulFactor)) / 6);
+        blockPosZ = ((labyrinthGuy.playerCamera.z + (labyrinthGuy.playerCamera.lz * fraction * mulFactor)) / 6);
+        break;
+    case 'e':
+        switch (labyrinth.map[blockPosZ][blockPosX])
+        {
+        case '2':
+            TeleportPlayer(UP);
+            break;
+        case '3':
+            TeleportPlayer(DOWN);
+            break;
+        case '4':
+            labyrinth.numberOfItems--;
+            labyrinth.map[blockPosZ][blockPosX] = '0';
+            break;
+        default:
+            break;
+        }
+        return TRUE;
+    default:
+        break;
     }
-    else if (key == 's')
-    {
-        blockPosX = ((labyrinthGuy.playerCamera.x - labyrinthGuy.playerCamera.lx * fraction) / 6);
-        blockPosZ = ((labyrinthGuy.playerCamera.z - labyrinthGuy.playerCamera.lz * fraction) / 6);
-    };
 
     if (labyrinth.map[blockPosZ][blockPosX] == '1')
     {
-        if (key == 'w')
-        {
-            labyrinthGuy.playerCamera.x -= labyrinthGuy.playerCamera.lx * fraction;
-            labyrinthGuy.playerCamera.z -= labyrinthGuy.playerCamera.lz * fraction;
-        }
-        else if (key == 's')
-        {
-            labyrinthGuy.playerCamera.x += labyrinthGuy.playerCamera.lx * fraction;
-            labyrinthGuy.playerCamera.z += labyrinthGuy.playerCamera.lz * fraction;
-        }
+        labyrinthGuy.playerCamera.x -= (labyrinthGuy.playerCamera.lx * fraction * mulFactor);
+        labyrinthGuy.playerCamera.z -= (labyrinthGuy.playerCamera.lz * fraction * mulFactor);
 
         return TRUE;
     }
@@ -127,8 +99,29 @@ int PlayerCollision(unsigned char key, int time)
     return FALSE;
 }
 
+void SetInitialMapConfig()
+{
+    /*MAP CONFIG*/
+
+    labyrinth.map = (char **)malloc(1 * sizeof(char *));
+    labyrinth.map[0] = (char *)malloc(1 * sizeof(char));
+    labyrinth.numberOfItems = 0;
+    labyrinth.floorSize = 0;
+    labyrinth.numberOfFloors = 0;
+
+    /*--------------*/
+
+    return;
+}
+
 void SetInitialPlayerConfig()
 {
+    /*PLAYER CONFIG*/
+
+    labyrinthGuy.playerCamera.angle = 0;
+    labyrinthGuy.playerCamera.lx = sin(labyrinthGuy.playerCamera.angle);
+    labyrinthGuy.playerCamera.lz = -cos(labyrinthGuy.playerCamera.angle);
+
     labyrinthGuy.currentFloor = 1;
 
     int i, j;
@@ -144,6 +137,9 @@ void SetInitialPlayerConfig()
             }
         }
     }
+
+    /*--------------*/
+
     return;
 }
 
@@ -162,6 +158,7 @@ int ReadFile()
     char *path = (char *)malloc(256 * sizeof(char));
     puts("Name/Path of the .txt file: ");
     scanf(" %s", path);
+
     FILE *fp = fopen(path, "r");
     if (fp == NULL)
     {
@@ -169,49 +166,43 @@ int ReadFile()
         return FALSE;
     }
 
-    int xIndex = 0, yIndex = 0, i = 0;
-    int boolean = TRUE;
+    int xIndex = 0, yIndex = 0;
     char aux;
-    labyrinth.map = (char **)malloc((yIndex + 1) * sizeof(char *));
-    labyrinth.map[yIndex] = (char *)malloc(1 * sizeof(char));
 
-    while (boolean)
+    while (TRUE)
     {
         aux = getc(fp);
 
         if (aux == EOF)
-        {
-            (boolean = FALSE);
             break;
-        }
-
-        // printf("aux: %c yIndex: %d xIndex: %d\n", aux, yIndex, xIndex);
 
         if (aux != '\n' && aux != ' ')
         {
+            (aux == '4') ? labyrinth.numberOfItems++ : 0;
+
             labyrinth.map[yIndex][xIndex] = aux;
             xIndex++;
-            // if (xIndex % 15 == 0)
             labyrinth.map[yIndex] = (char *)realloc(labyrinth.map[yIndex], (xIndex + 1) * sizeof(char));
         }
         else if (aux == '\n')
         {
-            labyrinth.map[yIndex][xIndex] = aux;
             xIndex = 0;
             yIndex++;
             labyrinth.map = (char **)realloc(labyrinth.map, (yIndex + 1) * sizeof(char *));
-            labyrinth.map[yIndex] = (char *)malloc(15 * sizeof(char));
+            labyrinth.map[yIndex] = (char *)malloc(1 * sizeof(char));
         }
     }
+    
     labyrinth.floorSize = xIndex;
     labyrinth.numberOfFloors = (yIndex + 1) / labyrinth.floorSize;
 
     printf("\nfloor size: %d x %d\n", labyrinth.floorSize, labyrinth.floorSize);
     printf("number of floors: %d\n", labyrinth.numberOfFloors);
+    printf("number of items: %d\n", labyrinth.numberOfItems);
 
     /*MAP TEST*/
 
-    // int j;
+    // int i, j;
     // for (i = 0; i < labyrinth.floorSize; i++)
     // {
     //     for (j = 0; j < labyrinth.floorSize; j++)
@@ -232,6 +223,7 @@ void WindowsResize(int w, int h)
 
     if (h == 0)
         h = 1;
+
     float ratio = w * 1.0 / h;
 
     glMatrixMode(GL_PROJECTION);
@@ -244,62 +236,67 @@ void WindowsResize(int w, int h)
 
 void UserActions(unsigned char key, int xx, int yy)
 {
-    if (PlayerCollision(key, 1))
+    if (PlayerCollision(key))
+        return;
+
+    if (mapViewState)
     {
+        mapViewState = FALSE;
         return;
     }
 
     float fraction = 0.3f;
 
-    /*USER MOVEMENT*/
-    if (key == 'd')
+    if (key == 'm' && mapViewState == FALSE)
     {
+        mapViewState = TRUE;
+        return;
+    }
+
+    switch (key)
+    {
+    case 'd':
         labyrinthGuy.playerCamera.angle += 0.05f;
         labyrinthGuy.playerCamera.lx = sin(labyrinthGuy.playerCamera.angle);
         labyrinthGuy.playerCamera.lz = -cos(labyrinthGuy.playerCamera.angle);
-    }
-
-    if (key == 'a')
-    {
+        break;
+    case 'a':
         labyrinthGuy.playerCamera.angle -= 0.05f;
         labyrinthGuy.playerCamera.lx = sin(labyrinthGuy.playerCamera.angle);
         labyrinthGuy.playerCamera.lz = -cos(labyrinthGuy.playerCamera.angle);
-    }
-
-    if (key == 'w')
-    {
+        break;
+    case 'w':
         labyrinthGuy.playerCamera.x += labyrinthGuy.playerCamera.lx * fraction;
         labyrinthGuy.playerCamera.z += labyrinthGuy.playerCamera.lz * fraction;
-    }
-
-    if (key == 's')
-    {
+        break;
+    case 's':
         labyrinthGuy.playerCamera.x -= labyrinthGuy.playerCamera.lx * fraction;
         labyrinthGuy.playerCamera.z -= labyrinthGuy.playerCamera.lz * fraction;
+        break;
+    default:
+        break;
     }
 
-    PlayerCollision(key, 2);
-    /*--------------*/
-
-    /*USER GET ITEM*/
-    /*--------------*/
+    PlayerCollision(key);
 
     glutPostRedisplay();
 }
 
 void Display(void)
 {
-    glClearColor(0, 0, 0, 0.0);
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Set the camera
-
     DrawMap(labyrinth, labyrinthGuy);
+
     glLoadIdentity();
-    gluLookAt(labyrinthGuy.playerCamera.x, 1.0f, labyrinthGuy.playerCamera.z,
-              labyrinthGuy.playerCamera.x + labyrinthGuy.playerCamera.lx, 1.0f, labyrinthGuy.playerCamera.z + labyrinthGuy.playerCamera.lz,
-              0.0f, 1.0f, 0.0f);
+
+    (mapViewState == FALSE) ? gluLookAt(labyrinthGuy.playerCamera.x, 1.0f, labyrinthGuy.playerCamera.z,
+                                        labyrinthGuy.playerCamera.x + labyrinthGuy.playerCamera.lx, 1.0f, labyrinthGuy.playerCamera.z + labyrinthGuy.playerCamera.lz,
+                                        0.0f, 1.0f, 0.0f)
+                            : gluLookAt(labyrinthGuy.playerCamera.x, windowsWidth / 100 + 30, labyrinthGuy.playerCamera.z,
+                                        labyrinthGuy.playerCamera.x, 0.0f, labyrinthGuy.playerCamera.z,
+                                        1.0f, 1.0f, 0.0f);
+
     return;
 }
 
@@ -315,6 +312,8 @@ void DefineCallbacks()
 
 int main(int argc, char **argv)
 {
+    SetInitialMapConfig();
+
     /*FILE READING*/
 
     if (!ReadFile())
@@ -322,12 +321,23 @@ int main(int argc, char **argv)
 
     /*--------------*/
 
+    SetInitialPlayerConfig();
+
+    /*PRINT INSTRUCTIONS*/
+
+    printf("\n*--------------*\n\n");
+    printf("GAME GOAL: Get all the items across the map and return to the start position to win the game\n\n");
+    printf("PLAYER MOVEMENT:\n   w --> Up\n   s --> Down\n   a --> Left\n   d --> Right\n\n");
+    printf("PLAYER ACTIONS:\n   e --> Use teleport and get items\n   m --> See the map\n\n");
+    printf("MAP COMPONENTS:\n   green block --> Player position\n   red block --> Teleport up\n   pink block --> Teleport down\n   orange block --> Item\n\n");
+    printf("*--------------*\n");
+
+    /*--------------*/
+
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(windowsHeight, windowsWidth);
     glutCreateWindow("Labyrinth");
-
-    SetInitialPlayerConfig();
 
     DefineCallbacks();
 
